@@ -1,0 +1,2031 @@
+Terminals which are not used
+
+   "<"
+   ">"
+   "<="
+   "=>"
+   "=="
+   "!="
+   "+"
+   "-"
+   "*"
+   "/"
+   UMINUS
+   PTR
+   MOD
+
+
+State 5 conflicts: 1 shift/reduce
+State 113 conflicts: 4 shift/reduce
+State 133 conflicts: 4 shift/reduce
+State 134 conflicts: 4 shift/reduce
+State 135 conflicts: 4 shift/reduce
+State 136 conflicts: 4 shift/reduce
+State 149 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: prog $end
+
+    1 prog: DeclConst DeclVar DeclFonct DeclMain
+
+    2 DeclConst: DeclConst CONST ListConst PV
+    3          | /* empty */
+
+    4 ListConst: ListConst VRG IDENT EGAL NombreSigne
+    5          | IDENT EGAL NombreSigne
+
+    6 NombreSigne: NUM
+    7            | ADDSUB NUM
+
+    8 DeclVar: DeclVar VAR ListVar PV
+    9        | /* empty */
+
+   10 ListVar: ListVar VRG Variable
+   11        | Variable
+
+   12 Variable: STAR Variable
+   13         | IDENT LSQB ENTIER RSQB
+   14         | IDENT
+
+   15 DeclMain: EnTeteMain Corps
+
+   16 EnTeteMain: MAIN LPAR RPAR
+
+   17 DeclFonct: DeclFonct DeclUneFonct
+   18          | /* empty */
+
+   19 DeclUneFonct: EnTeteFonct Corps
+
+   20 EnTeteFonct: Type IDENT LPAR Parametres RPAR
+
+   21 Type: ENTIER
+   22     | VOID
+
+   23 Parametres: VOID
+   24           | ListVar
+   25           | /* empty */
+
+   26 Corps: LACC DeclConst DeclVar SuiteInstr RACC
+
+   27 SuiteInstr: SuiteInstr Instr
+   28           | /* empty */
+
+   29 InstrComp: LACC SuiteInstr RACC
+
+   30 Instr: IDENT EGAL Exp PV
+   31      | STAR IDENT EGAL Exp PV
+   32      | IDENT EGAL MALLOC LPAR Exp RPAR PV
+   33      | FREE LPAR Exp RPAR PV
+   34      | IF LPAR Exp RPAR Instr
+   35      | IF LPAR Exp RPAR Instr ELSE Instr
+   36      | WHILE LPAR Exp RPAR Instr
+   37      | RETURN Exp PV
+   38      | RETURN PV
+   39      | IDENT LPAR Arguments RPAR PV
+   40      | READ LPAR IDENT RPAR PV
+   41      | PRINT LPAR Exp RPAR PV
+   42      | PV
+   43      | InstrComp
+
+   44 Arguments: ListExp
+   45          | /* empty */
+
+   46 ListExp: ListExp VRG Exp
+   47        | Exp
+
+   48 Exp: Exp ADDSUB Exp
+   49    | Exp STAR Exp
+   50    | Exp DIV Exp
+   51    | Exp COMP Exp
+   52    | ADDSUB Exp
+   53    | LPAR Exp RPAR
+   54    | Variable
+   55    | ADR Variable
+   56    | NUM
+   57    | IDENT LPAR Arguments RPAR
+
+   58 PV: ";"
+
+   59 CONST: "const"
+
+   60 RETURN: "return"
+
+   61 FREE: "free"
+
+   62 MALLOC: "malloc"
+
+   63 VRG: ","
+
+   64 LPAR: "("
+
+   65 RPAR: ")"
+
+   66 LACC: "{"
+
+   67 RACC: "}"
+
+   68 LSQB: "["
+
+   69 RSQB: "]"
+
+   70 VOID: "void"
+
+   71 ENTIER: "entier"
+
+   72 POINTEUR: "pointeur"
+
+   73 IF: "if"
+
+   74 ELSE: "else"
+
+   75 WHILE: "while"
+
+   76 EGAL: "="
+
+   77 VAR: ENTIER
+   78    | POINTEUR
+
+   79 MAIN: "main"
+
+   80 READ: "read"
+
+   81 PRINT: "print"
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+"<" (258)
+">" (259)
+"<=" (260)
+"=>" (261)
+"==" (262)
+"!=" (263)
+"+" (264)
+"-" (265)
+"*" (266)
+"/" (267)
+UMINUS (268)
+ADR (269) 55
+PTR (270)
+COMP (271) 51
+ADDSUB (272) 7 48 52
+DIV (273) 50
+STAR (274) 12 31 49
+NUM (275) 6 7 56
+IDENT (276) 4 5 13 14 20 30 31 32 39 40 57
+MOD (277)
+";" (278) 58
+"const" (279) 59
+"return" (280) 60
+"free" (281) 61
+"malloc" (282) 62
+"," (283) 63
+"(" (284) 64
+")" (285) 65
+"{" (286) 66
+"}" (287) 67
+"[" (288) 68
+"]" (289) 69
+"void" (290) 70
+"entier" (291) 71
+"pointeur" (292) 72
+"if" (293) 73
+"else" (294) 74
+"while" (295) 75
+"=" (296) 76
+"main" (297) 79
+"read" (298) 80
+"print" (299) 81
+
+
+Nonterminals, with rules where they appear
+
+$accept (45)
+    on left: 0
+prog (46)
+    on left: 1, on right: 0
+DeclConst (47)
+    on left: 2 3, on right: 1 2 26
+ListConst (48)
+    on left: 4 5, on right: 2 4
+NombreSigne (49)
+    on left: 6 7, on right: 4 5
+DeclVar (50)
+    on left: 8 9, on right: 1 8 26
+ListVar (51)
+    on left: 10 11, on right: 8 10 24
+Variable (52)
+    on left: 12 13 14, on right: 10 11 12 54 55
+DeclMain (53)
+    on left: 15, on right: 1
+EnTeteMain (54)
+    on left: 16, on right: 15
+DeclFonct (55)
+    on left: 17 18, on right: 1 17
+DeclUneFonct (56)
+    on left: 19, on right: 17
+EnTeteFonct (57)
+    on left: 20, on right: 19
+Type (58)
+    on left: 21 22, on right: 20
+Parametres (59)
+    on left: 23 24 25, on right: 20
+Corps (60)
+    on left: 26, on right: 15 19
+SuiteInstr (61)
+    on left: 27 28, on right: 26 27 29
+InstrComp (62)
+    on left: 29, on right: 43
+Instr (63)
+    on left: 30 31 32 33 34 35 36 37 38 39 40 41 42 43,
+    on right: 27 34 35 36
+Arguments (64)
+    on left: 44 45, on right: 39 57
+ListExp (65)
+    on left: 46 47, on right: 44 46
+Exp (66)
+    on left: 48 49 50 51 52 53 54 55 56 57, on right: 30 31 32 33 34
+    35 36 37 41 46 47 48 49 50 51 52 53
+PV (67)
+    on left: 58, on right: 2 8 30 31 32 33 37 38 39 40 41 42
+CONST (68)
+    on left: 59, on right: 2
+RETURN (69)
+    on left: 60, on right: 37 38
+FREE (70)
+    on left: 61, on right: 33
+MALLOC (71)
+    on left: 62, on right: 32
+VRG (72)
+    on left: 63, on right: 4 10 46
+LPAR (73)
+    on left: 64, on right: 16 20 32 33 34 35 36 39 40 41 53 57
+RPAR (74)
+    on left: 65, on right: 16 20 32 33 34 35 36 39 40 41 53 57
+LACC (75)
+    on left: 66, on right: 26 29
+RACC (76)
+    on left: 67, on right: 26 29
+LSQB (77)
+    on left: 68, on right: 13
+RSQB (78)
+    on left: 69, on right: 13
+VOID (79)
+    on left: 70, on right: 22 23
+ENTIER (80)
+    on left: 71, on right: 13 21 77
+POINTEUR (81)
+    on left: 72, on right: 78
+IF (82)
+    on left: 73, on right: 34 35
+ELSE (83)
+    on left: 74, on right: 35
+WHILE (84)
+    on left: 75, on right: 36
+EGAL (85)
+    on left: 76, on right: 4 5 30 31 32
+VAR (86)
+    on left: 77 78, on right: 8
+MAIN (87)
+    on left: 79, on right: 16
+READ (88)
+    on left: 80, on right: 40
+PRINT (89)
+    on left: 81, on right: 41
+
+
+state 0
+
+    0 $accept: . prog $end
+
+    $default  reduce using rule 3 (DeclConst)
+
+    prog       go to state 1
+    DeclConst  go to state 2
+
+
+state 1
+
+    0 $accept: prog . $end
+
+    $end  shift, and go to state 3
+
+
+state 2
+
+    1 prog: DeclConst . DeclVar DeclFonct DeclMain
+    2 DeclConst: DeclConst . CONST ListConst PV
+
+    "const"  shift, and go to state 4
+
+    $default  reduce using rule 9 (DeclVar)
+
+    DeclVar  go to state 5
+    CONST    go to state 6
+
+
+state 3
+
+    0 $accept: prog $end .
+
+    $default  accept
+
+
+state 4
+
+   59 CONST: "const" .
+
+    $default  reduce using rule 59 (CONST)
+
+
+state 5
+
+    1 prog: DeclConst DeclVar . DeclFonct DeclMain
+    8 DeclVar: DeclVar . VAR ListVar PV
+
+    "entier"    shift, and go to state 7
+    "pointeur"  shift, and go to state 8
+
+    "entier"  [reduce using rule 18 (DeclFonct)]
+    $default  reduce using rule 18 (DeclFonct)
+
+    DeclFonct  go to state 9
+    ENTIER     go to state 10
+    POINTEUR   go to state 11
+    VAR        go to state 12
+
+
+state 6
+
+    2 DeclConst: DeclConst CONST . ListConst PV
+
+    IDENT  shift, and go to state 13
+
+    ListConst  go to state 14
+
+
+state 7
+
+   71 ENTIER: "entier" .
+
+    $default  reduce using rule 71 (ENTIER)
+
+
+state 8
+
+   72 POINTEUR: "pointeur" .
+
+    $default  reduce using rule 72 (POINTEUR)
+
+
+state 9
+
+    1 prog: DeclConst DeclVar DeclFonct . DeclMain
+   17 DeclFonct: DeclFonct . DeclUneFonct
+
+    "void"    shift, and go to state 15
+    "entier"  shift, and go to state 7
+    "main"    shift, and go to state 16
+
+    DeclMain      go to state 17
+    EnTeteMain    go to state 18
+    DeclUneFonct  go to state 19
+    EnTeteFonct   go to state 20
+    Type          go to state 21
+    VOID          go to state 22
+    ENTIER        go to state 23
+    MAIN          go to state 24
+
+
+state 10
+
+   77 VAR: ENTIER .
+
+    $default  reduce using rule 77 (VAR)
+
+
+state 11
+
+   78 VAR: POINTEUR .
+
+    $default  reduce using rule 78 (VAR)
+
+
+state 12
+
+    8 DeclVar: DeclVar VAR . ListVar PV
+
+    STAR   shift, and go to state 25
+    IDENT  shift, and go to state 26
+
+    ListVar   go to state 27
+    Variable  go to state 28
+
+
+state 13
+
+    5 ListConst: IDENT . EGAL NombreSigne
+
+    "="  shift, and go to state 29
+
+    EGAL  go to state 30
+
+
+state 14
+
+    2 DeclConst: DeclConst CONST ListConst . PV
+    4 ListConst: ListConst . VRG IDENT EGAL NombreSigne
+
+    ";"  shift, and go to state 31
+    ","  shift, and go to state 32
+
+    PV   go to state 33
+    VRG  go to state 34
+
+
+state 15
+
+   70 VOID: "void" .
+
+    $default  reduce using rule 70 (VOID)
+
+
+state 16
+
+   79 MAIN: "main" .
+
+    $default  reduce using rule 79 (MAIN)
+
+
+state 17
+
+    1 prog: DeclConst DeclVar DeclFonct DeclMain .
+
+    $default  reduce using rule 1 (prog)
+
+
+state 18
+
+   15 DeclMain: EnTeteMain . Corps
+
+    "{"  shift, and go to state 35
+
+    Corps  go to state 36
+    LACC   go to state 37
+
+
+state 19
+
+   17 DeclFonct: DeclFonct DeclUneFonct .
+
+    $default  reduce using rule 17 (DeclFonct)
+
+
+state 20
+
+   19 DeclUneFonct: EnTeteFonct . Corps
+
+    "{"  shift, and go to state 35
+
+    Corps  go to state 38
+    LACC   go to state 37
+
+
+state 21
+
+   20 EnTeteFonct: Type . IDENT LPAR Parametres RPAR
+
+    IDENT  shift, and go to state 39
+
+
+state 22
+
+   22 Type: VOID .
+
+    $default  reduce using rule 22 (Type)
+
+
+state 23
+
+   21 Type: ENTIER .
+
+    $default  reduce using rule 21 (Type)
+
+
+state 24
+
+   16 EnTeteMain: MAIN . LPAR RPAR
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 41
+
+
+state 25
+
+   12 Variable: STAR . Variable
+
+    STAR   shift, and go to state 25
+    IDENT  shift, and go to state 26
+
+    Variable  go to state 42
+
+
+state 26
+
+   13 Variable: IDENT . LSQB ENTIER RSQB
+   14         | IDENT .
+
+    "["  shift, and go to state 43
+
+    $default  reduce using rule 14 (Variable)
+
+    LSQB  go to state 44
+
+
+state 27
+
+    8 DeclVar: DeclVar VAR ListVar . PV
+   10 ListVar: ListVar . VRG Variable
+
+    ";"  shift, and go to state 31
+    ","  shift, and go to state 32
+
+    PV   go to state 45
+    VRG  go to state 46
+
+
+state 28
+
+   11 ListVar: Variable .
+
+    $default  reduce using rule 11 (ListVar)
+
+
+state 29
+
+   76 EGAL: "=" .
+
+    $default  reduce using rule 76 (EGAL)
+
+
+state 30
+
+    5 ListConst: IDENT EGAL . NombreSigne
+
+    ADDSUB  shift, and go to state 47
+    NUM     shift, and go to state 48
+
+    NombreSigne  go to state 49
+
+
+state 31
+
+   58 PV: ";" .
+
+    $default  reduce using rule 58 (PV)
+
+
+state 32
+
+   63 VRG: "," .
+
+    $default  reduce using rule 63 (VRG)
+
+
+state 33
+
+    2 DeclConst: DeclConst CONST ListConst PV .
+
+    $default  reduce using rule 2 (DeclConst)
+
+
+state 34
+
+    4 ListConst: ListConst VRG . IDENT EGAL NombreSigne
+
+    IDENT  shift, and go to state 50
+
+
+state 35
+
+   66 LACC: "{" .
+
+    $default  reduce using rule 66 (LACC)
+
+
+state 36
+
+   15 DeclMain: EnTeteMain Corps .
+
+    $default  reduce using rule 15 (DeclMain)
+
+
+state 37
+
+   26 Corps: LACC . DeclConst DeclVar SuiteInstr RACC
+
+    $default  reduce using rule 3 (DeclConst)
+
+    DeclConst  go to state 51
+
+
+state 38
+
+   19 DeclUneFonct: EnTeteFonct Corps .
+
+    $default  reduce using rule 19 (DeclUneFonct)
+
+
+state 39
+
+   20 EnTeteFonct: Type IDENT . LPAR Parametres RPAR
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 52
+
+
+state 40
+
+   64 LPAR: "(" .
+
+    $default  reduce using rule 64 (LPAR)
+
+
+state 41
+
+   16 EnTeteMain: MAIN LPAR . RPAR
+
+    ")"  shift, and go to state 53
+
+    RPAR  go to state 54
+
+
+state 42
+
+   12 Variable: STAR Variable .
+
+    $default  reduce using rule 12 (Variable)
+
+
+state 43
+
+   68 LSQB: "[" .
+
+    $default  reduce using rule 68 (LSQB)
+
+
+state 44
+
+   13 Variable: IDENT LSQB . ENTIER RSQB
+
+    "entier"  shift, and go to state 7
+
+    ENTIER  go to state 55
+
+
+state 45
+
+    8 DeclVar: DeclVar VAR ListVar PV .
+
+    $default  reduce using rule 8 (DeclVar)
+
+
+state 46
+
+   10 ListVar: ListVar VRG . Variable
+
+    STAR   shift, and go to state 25
+    IDENT  shift, and go to state 26
+
+    Variable  go to state 56
+
+
+state 47
+
+    7 NombreSigne: ADDSUB . NUM
+
+    NUM  shift, and go to state 57
+
+
+state 48
+
+    6 NombreSigne: NUM .
+
+    $default  reduce using rule 6 (NombreSigne)
+
+
+state 49
+
+    5 ListConst: IDENT EGAL NombreSigne .
+
+    $default  reduce using rule 5 (ListConst)
+
+
+state 50
+
+    4 ListConst: ListConst VRG IDENT . EGAL NombreSigne
+
+    "="  shift, and go to state 29
+
+    EGAL  go to state 58
+
+
+state 51
+
+    2 DeclConst: DeclConst . CONST ListConst PV
+   26 Corps: LACC DeclConst . DeclVar SuiteInstr RACC
+
+    "const"  shift, and go to state 4
+
+    $default  reduce using rule 9 (DeclVar)
+
+    DeclVar  go to state 59
+    CONST    go to state 6
+
+
+state 52
+
+   20 EnTeteFonct: Type IDENT LPAR . Parametres RPAR
+
+    STAR    shift, and go to state 25
+    IDENT   shift, and go to state 26
+    "void"  shift, and go to state 15
+
+    $default  reduce using rule 25 (Parametres)
+
+    ListVar     go to state 60
+    Variable    go to state 28
+    Parametres  go to state 61
+    VOID        go to state 62
+
+
+state 53
+
+   65 RPAR: ")" .
+
+    $default  reduce using rule 65 (RPAR)
+
+
+state 54
+
+   16 EnTeteMain: MAIN LPAR RPAR .
+
+    $default  reduce using rule 16 (EnTeteMain)
+
+
+state 55
+
+   13 Variable: IDENT LSQB ENTIER . RSQB
+
+    "]"  shift, and go to state 63
+
+    RSQB  go to state 64
+
+
+state 56
+
+   10 ListVar: ListVar VRG Variable .
+
+    $default  reduce using rule 10 (ListVar)
+
+
+state 57
+
+    7 NombreSigne: ADDSUB NUM .
+
+    $default  reduce using rule 7 (NombreSigne)
+
+
+state 58
+
+    4 ListConst: ListConst VRG IDENT EGAL . NombreSigne
+
+    ADDSUB  shift, and go to state 47
+    NUM     shift, and go to state 48
+
+    NombreSigne  go to state 65
+
+
+state 59
+
+    8 DeclVar: DeclVar . VAR ListVar PV
+   26 Corps: LACC DeclConst DeclVar . SuiteInstr RACC
+
+    "entier"    shift, and go to state 7
+    "pointeur"  shift, and go to state 8
+
+    $default  reduce using rule 28 (SuiteInstr)
+
+    SuiteInstr  go to state 66
+    ENTIER      go to state 10
+    POINTEUR    go to state 11
+    VAR         go to state 12
+
+
+state 60
+
+   10 ListVar: ListVar . VRG Variable
+   24 Parametres: ListVar .
+
+    ","  shift, and go to state 32
+
+    $default  reduce using rule 24 (Parametres)
+
+    VRG  go to state 46
+
+
+state 61
+
+   20 EnTeteFonct: Type IDENT LPAR Parametres . RPAR
+
+    ")"  shift, and go to state 53
+
+    RPAR  go to state 67
+
+
+state 62
+
+   23 Parametres: VOID .
+
+    $default  reduce using rule 23 (Parametres)
+
+
+state 63
+
+   69 RSQB: "]" .
+
+    $default  reduce using rule 69 (RSQB)
+
+
+state 64
+
+   13 Variable: IDENT LSQB ENTIER RSQB .
+
+    $default  reduce using rule 13 (Variable)
+
+
+state 65
+
+    4 ListConst: ListConst VRG IDENT EGAL NombreSigne .
+
+    $default  reduce using rule 4 (ListConst)
+
+
+state 66
+
+   26 Corps: LACC DeclConst DeclVar SuiteInstr . RACC
+   27 SuiteInstr: SuiteInstr . Instr
+
+    STAR      shift, and go to state 68
+    IDENT     shift, and go to state 69
+    ";"       shift, and go to state 31
+    "return"  shift, and go to state 70
+    "free"    shift, and go to state 71
+    "{"       shift, and go to state 35
+    "}"       shift, and go to state 72
+    "if"      shift, and go to state 73
+    "while"   shift, and go to state 74
+    "read"    shift, and go to state 75
+    "print"   shift, and go to state 76
+
+    InstrComp  go to state 77
+    Instr      go to state 78
+    PV         go to state 79
+    RETURN     go to state 80
+    FREE       go to state 81
+    LACC       go to state 82
+    RACC       go to state 83
+    IF         go to state 84
+    WHILE      go to state 85
+    READ       go to state 86
+    PRINT      go to state 87
+
+
+state 67
+
+   20 EnTeteFonct: Type IDENT LPAR Parametres RPAR .
+
+    $default  reduce using rule 20 (EnTeteFonct)
+
+
+state 68
+
+   31 Instr: STAR . IDENT EGAL Exp PV
+
+    IDENT  shift, and go to state 88
+
+
+state 69
+
+   30 Instr: IDENT . EGAL Exp PV
+   32      | IDENT . EGAL MALLOC LPAR Exp RPAR PV
+   39      | IDENT . LPAR Arguments RPAR PV
+
+    "("  shift, and go to state 40
+    "="  shift, and go to state 29
+
+    LPAR  go to state 89
+    EGAL  go to state 90
+
+
+state 70
+
+   60 RETURN: "return" .
+
+    $default  reduce using rule 60 (RETURN)
+
+
+state 71
+
+   61 FREE: "free" .
+
+    $default  reduce using rule 61 (FREE)
+
+
+state 72
+
+   67 RACC: "}" .
+
+    $default  reduce using rule 67 (RACC)
+
+
+state 73
+
+   73 IF: "if" .
+
+    $default  reduce using rule 73 (IF)
+
+
+state 74
+
+   75 WHILE: "while" .
+
+    $default  reduce using rule 75 (WHILE)
+
+
+state 75
+
+   80 READ: "read" .
+
+    $default  reduce using rule 80 (READ)
+
+
+state 76
+
+   81 PRINT: "print" .
+
+    $default  reduce using rule 81 (PRINT)
+
+
+state 77
+
+   43 Instr: InstrComp .
+
+    $default  reduce using rule 43 (Instr)
+
+
+state 78
+
+   27 SuiteInstr: SuiteInstr Instr .
+
+    $default  reduce using rule 27 (SuiteInstr)
+
+
+state 79
+
+   42 Instr: PV .
+
+    $default  reduce using rule 42 (Instr)
+
+
+state 80
+
+   37 Instr: RETURN . Exp PV
+   38      | RETURN . PV
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    ";"     shift, and go to state 31
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 96
+    PV        go to state 97
+    LPAR      go to state 98
+
+
+state 81
+
+   33 Instr: FREE . LPAR Exp RPAR PV
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 99
+
+
+state 82
+
+   29 InstrComp: LACC . SuiteInstr RACC
+
+    $default  reduce using rule 28 (SuiteInstr)
+
+    SuiteInstr  go to state 100
+
+
+state 83
+
+   26 Corps: LACC DeclConst DeclVar SuiteInstr RACC .
+
+    $default  reduce using rule 26 (Corps)
+
+
+state 84
+
+   34 Instr: IF . LPAR Exp RPAR Instr
+   35      | IF . LPAR Exp RPAR Instr ELSE Instr
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 101
+
+
+state 85
+
+   36 Instr: WHILE . LPAR Exp RPAR Instr
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 102
+
+
+state 86
+
+   40 Instr: READ . LPAR IDENT RPAR PV
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 103
+
+
+state 87
+
+   41 Instr: PRINT . LPAR Exp RPAR PV
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 104
+
+
+state 88
+
+   31 Instr: STAR IDENT . EGAL Exp PV
+
+    "="  shift, and go to state 29
+
+    EGAL  go to state 105
+
+
+state 89
+
+   39 Instr: IDENT LPAR . Arguments RPAR PV
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    $default  reduce using rule 45 (Arguments)
+
+    Variable   go to state 95
+    Arguments  go to state 106
+    ListExp    go to state 107
+    Exp        go to state 108
+    LPAR       go to state 98
+
+
+state 90
+
+   30 Instr: IDENT EGAL . Exp PV
+   32      | IDENT EGAL . MALLOC LPAR Exp RPAR PV
+
+    ADR       shift, and go to state 91
+    ADDSUB    shift, and go to state 92
+    STAR      shift, and go to state 25
+    NUM       shift, and go to state 93
+    IDENT     shift, and go to state 94
+    "malloc"  shift, and go to state 109
+    "("       shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 110
+    MALLOC    go to state 111
+    LPAR      go to state 98
+
+
+state 91
+
+   55 Exp: ADR . Variable
+
+    STAR   shift, and go to state 25
+    IDENT  shift, and go to state 26
+
+    Variable  go to state 112
+
+
+state 92
+
+   52 Exp: ADDSUB . Exp
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 113
+    LPAR      go to state 98
+
+
+state 93
+
+   56 Exp: NUM .
+
+    $default  reduce using rule 56 (Exp)
+
+
+state 94
+
+   13 Variable: IDENT . LSQB ENTIER RSQB
+   14         | IDENT .
+   57 Exp: IDENT . LPAR Arguments RPAR
+
+    "("  shift, and go to state 40
+    "["  shift, and go to state 43
+
+    $default  reduce using rule 14 (Variable)
+
+    LPAR  go to state 114
+    LSQB  go to state 44
+
+
+state 95
+
+   54 Exp: Variable .
+
+    $default  reduce using rule 54 (Exp)
+
+
+state 96
+
+   37 Instr: RETURN Exp . PV
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ";"     shift, and go to state 31
+
+    PV  go to state 119
+
+
+state 97
+
+   38 Instr: RETURN PV .
+
+    $default  reduce using rule 38 (Instr)
+
+
+state 98
+
+   53 Exp: LPAR . Exp RPAR
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 120
+    LPAR      go to state 98
+
+
+state 99
+
+   33 Instr: FREE LPAR . Exp RPAR PV
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 121
+    LPAR      go to state 98
+
+
+state 100
+
+   27 SuiteInstr: SuiteInstr . Instr
+   29 InstrComp: LACC SuiteInstr . RACC
+
+    STAR      shift, and go to state 68
+    IDENT     shift, and go to state 69
+    ";"       shift, and go to state 31
+    "return"  shift, and go to state 70
+    "free"    shift, and go to state 71
+    "{"       shift, and go to state 35
+    "}"       shift, and go to state 72
+    "if"      shift, and go to state 73
+    "while"   shift, and go to state 74
+    "read"    shift, and go to state 75
+    "print"   shift, and go to state 76
+
+    InstrComp  go to state 77
+    Instr      go to state 78
+    PV         go to state 79
+    RETURN     go to state 80
+    FREE       go to state 81
+    LACC       go to state 82
+    RACC       go to state 122
+    IF         go to state 84
+    WHILE      go to state 85
+    READ       go to state 86
+    PRINT      go to state 87
+
+
+state 101
+
+   34 Instr: IF LPAR . Exp RPAR Instr
+   35      | IF LPAR . Exp RPAR Instr ELSE Instr
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 123
+    LPAR      go to state 98
+
+
+state 102
+
+   36 Instr: WHILE LPAR . Exp RPAR Instr
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 124
+    LPAR      go to state 98
+
+
+state 103
+
+   40 Instr: READ LPAR . IDENT RPAR PV
+
+    IDENT  shift, and go to state 125
+
+
+state 104
+
+   41 Instr: PRINT LPAR . Exp RPAR PV
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 126
+    LPAR      go to state 98
+
+
+state 105
+
+   31 Instr: STAR IDENT EGAL . Exp PV
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 127
+    LPAR      go to state 98
+
+
+state 106
+
+   39 Instr: IDENT LPAR Arguments . RPAR PV
+
+    ")"  shift, and go to state 53
+
+    RPAR  go to state 128
+
+
+state 107
+
+   44 Arguments: ListExp .
+   46 ListExp: ListExp . VRG Exp
+
+    ","  shift, and go to state 32
+
+    $default  reduce using rule 44 (Arguments)
+
+    VRG  go to state 129
+
+
+state 108
+
+   47 ListExp: Exp .
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+
+    $default  reduce using rule 47 (ListExp)
+
+
+state 109
+
+   62 MALLOC: "malloc" .
+
+    $default  reduce using rule 62 (MALLOC)
+
+
+state 110
+
+   30 Instr: IDENT EGAL Exp . PV
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ";"     shift, and go to state 31
+
+    PV  go to state 130
+
+
+state 111
+
+   32 Instr: IDENT EGAL MALLOC . LPAR Exp RPAR PV
+
+    "("  shift, and go to state 40
+
+    LPAR  go to state 131
+
+
+state 112
+
+   55 Exp: ADR Variable .
+
+    $default  reduce using rule 55 (Exp)
+
+
+state 113
+
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+   52    | ADDSUB Exp .
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+
+    COMP      [reduce using rule 52 (Exp)]
+    ADDSUB    [reduce using rule 52 (Exp)]
+    DIV       [reduce using rule 52 (Exp)]
+    STAR      [reduce using rule 52 (Exp)]
+    $default  reduce using rule 52 (Exp)
+
+
+state 114
+
+   57 Exp: IDENT LPAR . Arguments RPAR
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    $default  reduce using rule 45 (Arguments)
+
+    Variable   go to state 95
+    Arguments  go to state 132
+    ListExp    go to state 107
+    Exp        go to state 108
+    LPAR       go to state 98
+
+
+state 115
+
+   51 Exp: Exp COMP . Exp
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 133
+    LPAR      go to state 98
+
+
+state 116
+
+   48 Exp: Exp ADDSUB . Exp
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 134
+    LPAR      go to state 98
+
+
+state 117
+
+   50 Exp: Exp DIV . Exp
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 135
+    LPAR      go to state 98
+
+
+state 118
+
+   49 Exp: Exp STAR . Exp
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 136
+    LPAR      go to state 98
+
+
+state 119
+
+   37 Instr: RETURN Exp PV .
+
+    $default  reduce using rule 37 (Instr)
+
+
+state 120
+
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+   53    | LPAR Exp . RPAR
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ")"     shift, and go to state 53
+
+    RPAR  go to state 137
+
+
+state 121
+
+   33 Instr: FREE LPAR Exp . RPAR PV
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ")"     shift, and go to state 53
+
+    RPAR  go to state 138
+
+
+state 122
+
+   29 InstrComp: LACC SuiteInstr RACC .
+
+    $default  reduce using rule 29 (InstrComp)
+
+
+state 123
+
+   34 Instr: IF LPAR Exp . RPAR Instr
+   35      | IF LPAR Exp . RPAR Instr ELSE Instr
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ")"     shift, and go to state 53
+
+    RPAR  go to state 139
+
+
+state 124
+
+   36 Instr: WHILE LPAR Exp . RPAR Instr
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ")"     shift, and go to state 53
+
+    RPAR  go to state 140
+
+
+state 125
+
+   40 Instr: READ LPAR IDENT . RPAR PV
+
+    ")"  shift, and go to state 53
+
+    RPAR  go to state 141
+
+
+state 126
+
+   41 Instr: PRINT LPAR Exp . RPAR PV
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ")"     shift, and go to state 53
+
+    RPAR  go to state 142
+
+
+state 127
+
+   31 Instr: STAR IDENT EGAL Exp . PV
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ";"     shift, and go to state 31
+
+    PV  go to state 143
+
+
+state 128
+
+   39 Instr: IDENT LPAR Arguments RPAR . PV
+
+    ";"  shift, and go to state 31
+
+    PV  go to state 144
+
+
+state 129
+
+   46 ListExp: ListExp VRG . Exp
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 145
+    LPAR      go to state 98
+
+
+state 130
+
+   30 Instr: IDENT EGAL Exp PV .
+
+    $default  reduce using rule 30 (Instr)
+
+
+state 131
+
+   32 Instr: IDENT EGAL MALLOC LPAR . Exp RPAR PV
+
+    ADR     shift, and go to state 91
+    ADDSUB  shift, and go to state 92
+    STAR    shift, and go to state 25
+    NUM     shift, and go to state 93
+    IDENT   shift, and go to state 94
+    "("     shift, and go to state 40
+
+    Variable  go to state 95
+    Exp       go to state 146
+    LPAR      go to state 98
+
+
+state 132
+
+   57 Exp: IDENT LPAR Arguments . RPAR
+
+    ")"  shift, and go to state 53
+
+    RPAR  go to state 147
+
+
+state 133
+
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+   51    | Exp COMP Exp .
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+
+    COMP      [reduce using rule 51 (Exp)]
+    ADDSUB    [reduce using rule 51 (Exp)]
+    DIV       [reduce using rule 51 (Exp)]
+    STAR      [reduce using rule 51 (Exp)]
+    $default  reduce using rule 51 (Exp)
+
+
+state 134
+
+   48 Exp: Exp . ADDSUB Exp
+   48    | Exp ADDSUB Exp .
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+
+    COMP      [reduce using rule 48 (Exp)]
+    ADDSUB    [reduce using rule 48 (Exp)]
+    DIV       [reduce using rule 48 (Exp)]
+    STAR      [reduce using rule 48 (Exp)]
+    $default  reduce using rule 48 (Exp)
+
+
+state 135
+
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   50    | Exp DIV Exp .
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+
+    COMP      [reduce using rule 50 (Exp)]
+    ADDSUB    [reduce using rule 50 (Exp)]
+    DIV       [reduce using rule 50 (Exp)]
+    STAR      [reduce using rule 50 (Exp)]
+    $default  reduce using rule 50 (Exp)
+
+
+state 136
+
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   49    | Exp STAR Exp .
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+
+    COMP      [reduce using rule 49 (Exp)]
+    ADDSUB    [reduce using rule 49 (Exp)]
+    DIV       [reduce using rule 49 (Exp)]
+    STAR      [reduce using rule 49 (Exp)]
+    $default  reduce using rule 49 (Exp)
+
+
+state 137
+
+   53 Exp: LPAR Exp RPAR .
+
+    $default  reduce using rule 53 (Exp)
+
+
+state 138
+
+   33 Instr: FREE LPAR Exp RPAR . PV
+
+    ";"  shift, and go to state 31
+
+    PV  go to state 148
+
+
+state 139
+
+   34 Instr: IF LPAR Exp RPAR . Instr
+   35      | IF LPAR Exp RPAR . Instr ELSE Instr
+
+    STAR      shift, and go to state 68
+    IDENT     shift, and go to state 69
+    ";"       shift, and go to state 31
+    "return"  shift, and go to state 70
+    "free"    shift, and go to state 71
+    "{"       shift, and go to state 35
+    "if"      shift, and go to state 73
+    "while"   shift, and go to state 74
+    "read"    shift, and go to state 75
+    "print"   shift, and go to state 76
+
+    InstrComp  go to state 77
+    Instr      go to state 149
+    PV         go to state 79
+    RETURN     go to state 80
+    FREE       go to state 81
+    LACC       go to state 82
+    IF         go to state 84
+    WHILE      go to state 85
+    READ       go to state 86
+    PRINT      go to state 87
+
+
+state 140
+
+   36 Instr: WHILE LPAR Exp RPAR . Instr
+
+    STAR      shift, and go to state 68
+    IDENT     shift, and go to state 69
+    ";"       shift, and go to state 31
+    "return"  shift, and go to state 70
+    "free"    shift, and go to state 71
+    "{"       shift, and go to state 35
+    "if"      shift, and go to state 73
+    "while"   shift, and go to state 74
+    "read"    shift, and go to state 75
+    "print"   shift, and go to state 76
+
+    InstrComp  go to state 77
+    Instr      go to state 150
+    PV         go to state 79
+    RETURN     go to state 80
+    FREE       go to state 81
+    LACC       go to state 82
+    IF         go to state 84
+    WHILE      go to state 85
+    READ       go to state 86
+    PRINT      go to state 87
+
+
+state 141
+
+   40 Instr: READ LPAR IDENT RPAR . PV
+
+    ";"  shift, and go to state 31
+
+    PV  go to state 151
+
+
+state 142
+
+   41 Instr: PRINT LPAR Exp RPAR . PV
+
+    ";"  shift, and go to state 31
+
+    PV  go to state 152
+
+
+state 143
+
+   31 Instr: STAR IDENT EGAL Exp PV .
+
+    $default  reduce using rule 31 (Instr)
+
+
+state 144
+
+   39 Instr: IDENT LPAR Arguments RPAR PV .
+
+    $default  reduce using rule 39 (Instr)
+
+
+state 145
+
+   46 ListExp: ListExp VRG Exp .
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+
+    $default  reduce using rule 46 (ListExp)
+
+
+state 146
+
+   32 Instr: IDENT EGAL MALLOC LPAR Exp . RPAR PV
+   48 Exp: Exp . ADDSUB Exp
+   49    | Exp . STAR Exp
+   50    | Exp . DIV Exp
+   51    | Exp . COMP Exp
+
+    COMP    shift, and go to state 115
+    ADDSUB  shift, and go to state 116
+    DIV     shift, and go to state 117
+    STAR    shift, and go to state 118
+    ")"     shift, and go to state 53
+
+    RPAR  go to state 153
+
+
+state 147
+
+   57 Exp: IDENT LPAR Arguments RPAR .
+
+    $default  reduce using rule 57 (Exp)
+
+
+state 148
+
+   33 Instr: FREE LPAR Exp RPAR PV .
+
+    $default  reduce using rule 33 (Instr)
+
+
+state 149
+
+   34 Instr: IF LPAR Exp RPAR Instr .
+   35      | IF LPAR Exp RPAR Instr . ELSE Instr
+
+    "else"  shift, and go to state 154
+
+    "else"    [reduce using rule 34 (Instr)]
+    $default  reduce using rule 34 (Instr)
+
+    ELSE  go to state 155
+
+
+state 150
+
+   36 Instr: WHILE LPAR Exp RPAR Instr .
+
+    $default  reduce using rule 36 (Instr)
+
+
+state 151
+
+   40 Instr: READ LPAR IDENT RPAR PV .
+
+    $default  reduce using rule 40 (Instr)
+
+
+state 152
+
+   41 Instr: PRINT LPAR Exp RPAR PV .
+
+    $default  reduce using rule 41 (Instr)
+
+
+state 153
+
+   32 Instr: IDENT EGAL MALLOC LPAR Exp RPAR . PV
+
+    ";"  shift, and go to state 31
+
+    PV  go to state 156
+
+
+state 154
+
+   74 ELSE: "else" .
+
+    $default  reduce using rule 74 (ELSE)
+
+
+state 155
+
+   35 Instr: IF LPAR Exp RPAR Instr ELSE . Instr
+
+    STAR      shift, and go to state 68
+    IDENT     shift, and go to state 69
+    ";"       shift, and go to state 31
+    "return"  shift, and go to state 70
+    "free"    shift, and go to state 71
+    "{"       shift, and go to state 35
+    "if"      shift, and go to state 73
+    "while"   shift, and go to state 74
+    "read"    shift, and go to state 75
+    "print"   shift, and go to state 76
+
+    InstrComp  go to state 77
+    Instr      go to state 157
+    PV         go to state 79
+    RETURN     go to state 80
+    FREE       go to state 81
+    LACC       go to state 82
+    IF         go to state 84
+    WHILE      go to state 85
+    READ       go to state 86
+    PRINT      go to state 87
+
+
+state 156
+
+   32 Instr: IDENT EGAL MALLOC LPAR Exp RPAR PV .
+
+    $default  reduce using rule 32 (Instr)
+
+
+state 157
+
+   35 Instr: IF LPAR Exp RPAR Instr ELSE Instr .
+
+    $default  reduce using rule 35 (Instr)
