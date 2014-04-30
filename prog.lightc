@@ -1,0 +1,14 @@
+
+
+
+
+
+main () {
+	entier a;
+	read(a);
+	if ( 10 == 5 ) {
+		a = 10 / 5;
+	}
+	print(a);
+
+}

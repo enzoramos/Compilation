@@ -1,12 +1,3 @@
-%{
-#include "gcc.h"
-#include <stdio.h>
-#include <stdlib.h>
-  int fileno (FILE *stream); /*non ansi*/
-  enum{booleen,entier,none} declaration;
-%}
-%option noyywrap
-/* evite d'utiliser -lfl */
 %%
 [ \t]+ ;
 [<=|>=|==|!=]       {
@@ -39,5 +30,19 @@
 	}
 }
 [a-zA-Z][a-zA-Z0-9_]* { yylval.ident = yytext;   return IDENT;  }
+
+
+[ \t\n]+ ;
+[0-9]+ {sscanf(yytext,"%d",&yylval); return NOMBRE_ENTIER;}
+"if" {return IF;}
+"else" {return ELSE;}
+"print" {return PRINT;}
+"main" {return MAIN; }
+"(" {return LPAR; }
+")"  {return RPAR; }
+. return yytext[0];
+%%
+
+
 .|\n return yytext[0];
 %%
