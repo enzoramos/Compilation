@@ -40,8 +40,9 @@
 "="             {return EGAL ; }
 "+"  { yylval.operator = add; return ADDSUB; }
 "-"  { yylval.operator = sub; return ADDSUB; }
-"/"  { yylval.operator = div; return DIV; }
-"*"  { yylval.operator = tim; return STAR; }
+"/"  { yylval.operator = divide; return DIV; }
+"*"  { yylval.operator = times; return STAR; }
+"%"  { yylval.operator = mod; return MOD; }
 
 [a-zA-Z][a-zA-Z0-9_]* { yylval.indent = yytext;   return IDENT;  }
 

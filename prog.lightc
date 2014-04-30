@@ -1,14 +1,10 @@
 
 
-
-
-
 main () {
 	entier a;
-	read(a);
-	if ( 10 == 5 ) {
-		a = 10 / 5;
-	}
-	print(a);
 
+	while(1) {
+		print(23+3);
+	}
+	
 }
