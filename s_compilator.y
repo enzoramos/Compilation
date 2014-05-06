@@ -20,8 +20,10 @@ typedef struct {
   int  adr;
 } ident_t;
 
-int variables_index=1;
-int fonctions_index=1;
+enum {func, var} current_ident = var;
+
+int variables_index=4096;
+int fonctions_index=4096;
 ident_t variables[4096];
 ident_t fonctions[4096];
 
@@ -31,6 +33,8 @@ ident_t fonctions[4096];
  int  getAdr_fonction(const char * name);
  void decl_variable(const char * name, int type);
  void decl_fonction(const char * name, int type);
+
+ void clear_ident(ident_t* idents, int * size);
 
 
 %}
@@ -43,7 +47,7 @@ ident_t fonctions[4096];
   enum { add, sub, times, divide, mod }       operator;
   enum { vrg, pv }                            separator;
   enum { lpar, rpar, lacc, racc, lsqb, rsqb } block;
-  enum {ptr, ent} type;
+  int type;
 }
 
 %nonassoc ENDIF
@@ -78,32 +82,32 @@ NombreSigne: NUM
   | ADDSUB NUM
   ;
 DeclVar: DeclVar VAR ListVar PV
-  | Type Variable PV { switch($1) { case ent: decl_variable($2,ent); break; case ptr: decl_variable($2,ptr); break; }  }
+  | Type Variable PV { decl_variable($2,$1);   }
   | /* epsi */
   ;
 ListVar: ListVar VRG Variable
   | Variable 
-Variable: STAR Variable { strcpy($$,$2); pointeur_decal = 0; }
-  | IDENT LSQB ENTIER RSQB { strcpy($$,$1); pointeur_decal = $3; }
-  | IDENT { strcpy($$,$1); pointeur_decal = -1; }
+Variable: STAR Variable     { strcpy($$,$2); pointeur_decal = 0; }
+  | IDENT LSQB ENTIER RSQB  { strcpy($$,$1); pointeur_decal = $3; }
+  | IDENT                   { strcpy($$,$1); pointeur_decal = -1; }
   ;
-DeclMain: EnTeteMain Corps
+DeclMain: EnTeteMain Corps {  }
   ;
 EnTeteMain: MAIN LPAR RPAR { instarg("LABEL", 0); }
   ;
-DeclFonct: DeclFonct 
+DeclFonct: DeclFonct DeclUneFonct
   | /* epsi */
   ;
-DeclUneFonct: EnTeteFonct Corps
+DeclUneFonct: EnTeteFonct Corps { }
   ;
-EnTeteFonct: Type IDENT LPAR Parametres RPAR { instarg("LABEL", jump_label++); }
+EnTeteFonct:  IDENT LPAR  RPAR { decl_fonction($1, 0); instarg("LABEL", jump_label++); }
   ;
 Type: ENTIER
   | VOID
   ;
 Parametres: VOID
   | ListVar
-  | /* epsi */                                 /* Élargit le langage */
+  /* | epsi */                                 /* Élargit le langage */
   ;
 Corps: LACC DeclConst DeclVar SuiteInstr RACC
   ;
@@ -121,7 +125,7 @@ Instr: IDENT EGAL Exp PV                                 { instarg("SET", getAdr
   | WHILE WHILESTART LPAR Exp RPAR WHILETEST Instr       { instarg("JUMP", $2); instarg("LABEL",$6); }
   | RETURN Exp PV                                        { instarg("SET", $2); inst("RETURN"); }
   | RETURN PV                                            { inst("RETURN");    }
-  | IDENT LPAR Arguments RPAR PV                         {}
+  | IDENT LPAR Arguments RPAR PV                         { instarg("CALL", getAdr_fonction($1)); }
   | READ LPAR IDENT RPAR PV                              { inst("READ"); /*inst("PUSH");*/ }
   | PRINT LPAR Exp RPAR PV                               { instarg("SET", $3); inst("LOADR"); inst("WRITE"); }
   | PV                                                   {}
@@ -161,7 +165,7 @@ Exp: Exp ADDSUB Exp { instarg("SET", $3);
   }
   | ADDSUB Exp { if($1==sub) $$=($2); else $$=$2; } /* TODO ######### */
   | LPAR Exp RPAR
-  | Variable { $$=getAdr_variable($1); }
+  | Variable {  $$=getAdr_variable($1);  }
   /*| ADR Variable ################ */
   | NUM { instarg("SET",$$=$1); }
   | IDENT LPAR Arguments RPAR
@@ -194,20 +198,21 @@ int yyerror(char* s) {
     return false;
  }
 
- void decl_ident(const char * name, ident_t* ident, int ident_index, int type) {
+ void decl_ident(const char * name, ident_t* ident, int ident_index, int adr, int type, bool alloc) {
     if(isDecl_variable(name) == true) {
       inst("ERROR : DECLARED VARIABLE");
       exit(EXIT_FAILURE);
     }
     strcpy(ident[ident_index].name, name);
-    ident[ident_index].adr = ident_index;
+    ident[ident_index].adr = adr;
     ident[ident_index].type = type;
-    instarg("ALLOC", 2);
+    if(alloc) instarg("ALLOC", 2);
  }
 
 
- int  getAdr_indent(const char * name, ident_t* ident, int ident_index) {
+ int  getAdr_ident(const char * name, ident_t* ident, int ident_index) {
     int i;
+    /*printf("%s max : %d\n", name, ident_index);*/
     for (i=0; i < ident_index; i++) {
       /*printf("%s == %s ? %d\n", name, ident[i].name, i);*/
       if (strcmp(ident[i].name, name) == 0) {
@@ -226,19 +231,29 @@ bool isDecl_variable(const char * name) {
 return isDecl_ident(name, fonctions, fonctions_index);
  }
  int  getAdr_variable(const char * name) {
-return getAdr_indent(name, variables, variables_index);
+  /* printf("get Variable\n"); */
+return getAdr_ident(name, variables, variables_index);
  }
  int  getAdr_fonction(const char * name) {
-  return getAdr_indent(name, fonctions, fonctions_index);
+    /* printf("get function\n"); */
+  return getAdr_ident(name, fonctions, fonctions_index);
  }
  void decl_variable(const char * name, int type) {
-  decl_ident(name, variables, variables_index, type);
+  decl_ident(name, variables, variables_index, variables_index, type, true);
   variables_index++;
  }
  void decl_fonction(const char * name, int type) {
-  decl_ident(name, fonctions, fonctions_index, type);
+  decl_ident(name, fonctions, fonctions_index, jump_label, type, false);
   fonctions_index++;
  }
+
+  void clear_ident(ident_t* idents, int * size) {
+    int i;
+    for(i = 0; i < *size; i++) {
+      idents[i].name[0] = '\0';
+    }
+    *size = 0;
+  }
 
 void endProgram() {
   printf("HALT\n");
@@ -268,6 +283,11 @@ int main(int argc, char** argv) {
     fprintf(stderr,"usage: %s [src]\n",argv[0]);
     return 1;
   }
+
+  clear_ident(variables, &variables_index);
+  clear_ident(fonctions, &fonctions_index);
+
+  /* TODO INIATILISE MAIN in FONCTIONS */
   instarg("JUMP", 0);
   yyparse();
   endProgram();

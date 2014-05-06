@@ -1,10 +1,21 @@
 
 
+toast () {
+	entier b;
+	b=5;
+	print(b);
+	return;
+}
+
 main () {
 	entier a;
 
 	a = 4;
 
+	
+
 	print(a);
+
+	toast();
 	
 }
