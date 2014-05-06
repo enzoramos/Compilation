@@ -2,24 +2,48 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <string.h>
 int yyerror(char*);
 int yylex();
  FILE* yyin; 
  int jump_label=1;
+ int pointeur_decal = -1;
  void inst(const char *);
  void instarg(const char *,int);
  void comment(const char *);
- int compteur_variable=0;
+
+
+typedef struct {
+  char name[256];
+  enum {ptr, ent} type;
+  int  adr;
+} ident_t;
+
+int variables_index=1;
+int fonctions_index=1;
+ident_t variables[4096];
+ident_t fonctions[4096];
+
+ bool isDecl_variable(const char * name);
+ bool isDecl_fonciton(const char * name);
+ int  getAdr_variable(const char * name);
+ int  getAdr_fonction(const char * name);
+ void decl_variable(const char * name, int type);
+ void decl_fonction(const char * name, int type);
+
+
 %}
 
 %union { 
   void*                                       data;
   int                                         entier;
-  char*                                       indent;
+  char                                        ident[256];
   enum { gte, gt, lt, lte, eq, neq }          comparator;
   enum { add, sub, times, divide, mod }       operator;
   enum { vrg, pv }                            separator;
   enum { lpar, rpar, lacc, racc, lsqb, rsqb } block;
+  enum {ptr, ent} type;
 }
 
 %nonassoc ENDIF
@@ -29,9 +53,11 @@ int yylex();
 %token COMP ADDSUB STAR DIV MOD
 
 %type<data> Exp
-%type<entier> NUM FIXIF FIXELSE WHILESTART WHILETEST
+%type<entier> NUM FIXIF FIXELSE WHILESTART WHILETEST ListVar ENTIER
 %type<operator> ADDSUB
 %type<comparator> COMP
+%type<ident> IDENT Variable
+%type<type> Type
 
 
 
@@ -52,13 +78,14 @@ NombreSigne: NUM
   | ADDSUB NUM
   ;
 DeclVar: DeclVar VAR ListVar PV
+  | Type Variable PV { switch($1) { case ent: decl_variable($2,ent); break; case ptr: decl_variable($2,ptr); break; }  }
   | /* epsi */
   ;
 ListVar: ListVar VRG Variable
-  | Variable
-Variable: STAR Variable
-  | IDENT LSQB ENTIER RSQB
-  | IDENT
+  | Variable 
+Variable: STAR Variable { strcpy($$,$2); pointeur_decal = 0; }
+  | IDENT LSQB ENTIER RSQB { strcpy($$,$1); pointeur_decal = $3; }
+  | IDENT { strcpy($$,$1); pointeur_decal = -1; }
   ;
 DeclMain: EnTeteMain Corps
   ;
@@ -85,7 +112,7 @@ SuiteInstr: SuiteInstr Instr
   ;
 InstrComp: LACC SuiteInstr RACC
   ;
-Instr: IDENT EGAL Exp PV                                 { instarg("ALLOC", 1); instarg("SET", $3); inst("PUSH"); }
+Instr: IDENT EGAL Exp PV                                 { instarg("SET", getAdr_variable($1)); inst("SWAP"); instarg("SET", $3); inst("SAVER"); }
   | STAR IDENT EGAL Exp PV                               {}
   | IDENT EGAL MALLOC LPAR Exp RPAR PV                   {}
   | FREE LPAR Exp RPAR PV                                {}
@@ -93,10 +120,10 @@ Instr: IDENT EGAL Exp PV                                 { instarg("ALLOC", 1); 
   | IF LPAR Exp RPAR FIXIF Instr  ELSE FIXELSE Instr     { instarg("LABEL",$8); }
   | WHILE WHILESTART LPAR Exp RPAR WHILETEST Instr       { instarg("JUMP", $2); instarg("LABEL",$6); }
   | RETURN Exp PV                                        { instarg("SET", $2); inst("RETURN"); }
-  | RETURN PV                                            { inst("RETURN"); }
+  | RETURN PV                                            { inst("RETURN");    }
   | IDENT LPAR Arguments RPAR PV                         {}
-  | READ LPAR IDENT RPAR PV                              { inst("READ"); inst("PUSH"); }
-  | PRINT LPAR Exp RPAR PV                               { inst("POP");  inst("WRITE"); }
+  | READ LPAR IDENT RPAR PV                              { inst("READ"); /*inst("PUSH");*/ }
+  | PRINT LPAR Exp RPAR PV                               { instarg("SET", $3); inst("LOADR"); inst("WRITE"); }
   | PV                                                   {}
   | InstrComp                                            {}
   ;
@@ -113,11 +140,11 @@ Exp: Exp ADDSUB Exp { instarg("SET", $3);
           inst("ADD"); 
     else 
           inst("SUB");
-    inst("PUSH"); 
+    /* inst("PUSH"); */ 
   }
-  | Exp STAR Exp { instarg("SET", $3); inst("SWAP"); instarg("SET", $1); inst("MULT"); inst("PUSH"); }
-  | Exp DIV Exp  { instarg("SET", $3); inst("SWAP"); instarg("SET", $1); inst("DIV"); inst("PUSH"); }
-  | Exp MOD Exp  { instarg("SET", $3); inst("SWAP"); instarg("SET", $1); inst("MOD"); inst("PUSH"); }
+  | Exp STAR Exp { instarg("SET", $3); inst("SWAP"); instarg("SET", $1); inst("MULT"); /* inst("PUSH"); */ }
+  | Exp DIV Exp  { instarg("SET", $3); inst("SWAP"); instarg("SET", $1); inst("DIV");  /* inst("PUSH"); */ }
+  | Exp MOD Exp  { instarg("SET", $3); inst("SWAP"); instarg("SET", $1); inst("MOD");  /* inst("PUSH"); */ }
   | Exp COMP Exp { instarg("SET", $3); 
   inst("SWAP"); 
   instarg("SET", $1);
@@ -130,11 +157,11 @@ Exp: Exp ADDSUB Exp { instarg("SET", $3);
     case gte: inst("GEQ");  break;
     default: inst("UNDEFINED COMPARATOR");
   }
-  inst("WRITE");
+
   }
   | ADDSUB Exp { if($1==sub) $$=($2); else $$=$2; } /* TODO ######### */
   | LPAR Exp RPAR
-  | Variable
+  | Variable { $$=getAdr_variable($1); }
   /*| ADR Variable ################ */
   | NUM { instarg("SET",$$=$1); }
   | IDENT LPAR Arguments RPAR
@@ -157,6 +184,61 @@ int yyerror(char* s) {
 }
 
 
+ bool isDecl_ident(const char * name, ident_t* ident, int ident_index) {
+    int i;
+    for (i=0; i < ident_index; i++) {
+      if (strcmp(ident[i].name, name) == 0) {
+        return true;
+      }
+    }
+    return false;
+ }
+
+ void decl_ident(const char * name, ident_t* ident, int ident_index, int type) {
+    if(isDecl_variable(name) == true) {
+      inst("ERROR : DECLARED VARIABLE");
+      exit(EXIT_FAILURE);
+    }
+    strcpy(ident[ident_index].name, name);
+    ident[ident_index].adr = ident_index;
+    ident[ident_index].type = type;
+    instarg("ALLOC", 2);
+ }
+
+
+ int  getAdr_indent(const char * name, ident_t* ident, int ident_index) {
+    int i;
+    for (i=0; i < ident_index; i++) {
+      /*printf("%s == %s ? %d\n", name, ident[i].name, i);*/
+      if (strcmp(ident[i].name, name) == 0) {
+        return ident[i].adr;
+      }
+    }
+    inst("ERROR UNKNOWN VARIABLE");
+    exit(EXIT_FAILURE);
+    return -1;
+ }
+
+bool isDecl_variable(const char * name) {
+  return isDecl_ident(name, variables, variables_index);
+}
+ bool isDecl_fonciton(const char * name) {
+return isDecl_ident(name, fonctions, fonctions_index);
+ }
+ int  getAdr_variable(const char * name) {
+return getAdr_indent(name, variables, variables_index);
+ }
+ int  getAdr_fonction(const char * name) {
+  return getAdr_indent(name, fonctions, fonctions_index);
+ }
+ void decl_variable(const char * name, int type) {
+  decl_ident(name, variables, variables_index, type);
+  variables_index++;
+ }
+ void decl_fonction(const char * name, int type) {
+  decl_ident(name, fonctions, fonctions_index, type);
+  fonctions_index++;
+ }
 
 void endProgram() {
   printf("HALT\n");

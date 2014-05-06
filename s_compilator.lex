@@ -14,7 +14,7 @@
 "pointeur"      {return POINTEUR; }
 "while"         {return WHILE; }
 
-";"       {return PV; }
+
 "const"   {return CONST; }
 "return"  {return RETURN; }
 "read"    {return READ; }
@@ -22,6 +22,7 @@
 "free"    {return FREE; }
 "malloc"  {return MALLOC; }
 
+";"       {return PV; }
 "("			{return LPAR; }
 ")"			{return RPAR; }
 ","  {return VRG; }
@@ -44,7 +45,7 @@
 "*"  { yylval.operator = times; return STAR; }
 "%"  { yylval.operator = mod; return MOD; }
 
-[a-zA-Z][a-zA-Z0-9_]* { yylval.indent = yytext;   return IDENT;  }
+[a-zA-Z][a-zA-Z0-9_]* { strcpy(yylval.ident,yytext);   return IDENT;  }
 
 
 . return yytext[0];
