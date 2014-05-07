@@ -10,6 +10,7 @@ int yylex();
  int jump_label=1;
  int pointeur_decal = -1;
  bool declaration = false;
+ bool pop = false;
  int  declaration_type = 0;
  int currentAdr_var;
  void inst(const char *);
@@ -60,10 +61,10 @@ ident_t fonctions[4096];
 %token COMP ADDSUB STAR DIV MOD
 
 %type<data> Exp Parametres
-%type<entier> NUM FIXIF FIXELSE WHILESTART WHILETEST ListVar ENTIER NombreSigne
+%type<entier> NUM FIXIF FIXELSE WHILESTART WHILETEST  ENTIER NombreSigne
 %type<operator> ADDSUB
 %type<comparator> COMP
-%type<ident> IDENT Variable
+%type<ident> IDENT Variable ListVar
 %type<type> Type
 
 
@@ -82,14 +83,14 @@ ListConst: ListConst VRG IDENT EGAL NombreSigne
   | IDENT EGAL NombreSigne
   ;
 NombreSigne: NUM { $$=$1; }
-  | ADDSUB NUM { if($1==sub) $$=(-((int)$2)); else $$=$2; }
+  | ADDSUB NUM { $$=($1==sub)?(-$2):($2); }
   ;
 
-DeclVar: DeclVar VAR FIXDECLVAR ListVar PV { declaration = false; }
+DeclVar: DeclVar VAR FIXDECLVAR ListVar PV { declaration = false;  }
   | /* epsi */
   ;
-ListVar: ListVar VRG Variable { $$=$1; if(declaration) decl_variable($3, declaration_type);  }
-  | Variable { $$=$1; if(declaration) decl_variable($1, declaration_type);  }
+ListVar: ListVar VRG Variable { strcpy($$,$1); if(declaration) decl_variable($3, declaration_type); if (pop) { decl_variable($3, 0); instarg("SET", -variables_index); inst("LOADR");   }   }
+  | Variable { strcpy($$,$1); if(declaration) decl_variable($1, declaration_type); if (pop) { decl_variable($1, 0); instarg("SET", -variables_index); inst("LOADR");   }  }
 Variable: STAR Variable       { strcpy($$,$2); pointeur_decal = 0; }
   | IDENT LSQB Exp RSQB       { strcpy($$,$1); pointeur_decal = 1; }
   | IDENT                     { strcpy($$,$1); pointeur_decal = -1; }
@@ -101,9 +102,9 @@ EnTeteMain: MAIN LPAR RPAR { instarg("LABEL", 0); }
 DeclFonct: DeclFonct DeclUneFonct
   | /* epsi */
   ;
-DeclUneFonct: EnTeteFonct Corps { }
+DeclUneFonct: EnTeteFonct Corps {  }
   ;
-EnTeteFonct: Type  IDENT LPAR Parametres RPAR { decl_fonction($2, $1); instarg("LABEL", jump_label++); }
+EnTeteFonct: Type IDENT FIXDECLFONCTION LPAR Parametres RPAR { decl_fonction($2, $1); pop = false;  }
   ;
 Type: ENTIER { $$ = 1; }
   | VOID { $$ = 0; }
@@ -119,19 +120,19 @@ SuiteInstr: SuiteInstr Instr
   ;
 InstrComp: LACC SuiteInstr RACC
   ;
-Instr: IDENT EGAL Exp PV                                 { instarg("SET", getAdr_variable($1)); inst("SWAP");  $3; inst("POP"); inst("SAVER"); }
-  | STAR IDENT EGAL Exp PV                               { instarg("SET", getAdr_variable($2)); inst("LOADR"); inst("SWAP"); $4; inst("POP"); inst("SAVER"); }
-  | IDENT LSQB Exp RSQB EGAL Exp PV                      { instarg("SET", getAdr_variable($1)); inst("SWAP"); inst("POP"); inst("ADD"); inst("LOADR"); inst("SWAP"); $3; inst("POP"); inst("SAVER"); }
-  | IDENT EGAL MALLOC LPAR Exp RPAR PV                   { }
+Instr: IDENT EGAL Exp PV                                 { instarg("SET", getAdr_variable($1)); inst("SWAP");  inst("POP"); inst("SAVER"); }
+  | STAR IDENT EGAL Exp PV                               { instarg("SET", getAdr_variable($2)); inst("LOADR"); inst("SWAP"); inst("POP"); inst("SAVER"); }
+  | IDENT LSQB Exp RSQB EGAL Exp PV                      { instarg("SET", getAdr_variable($1)); inst("SWAP"); inst("POP"); inst("ADD"); inst("LOADR"); inst("SWAP"); inst("POP"); inst("SAVER"); }
+  | IDENT EGAL MALLOC LPAR Exp RPAR PV                   {}
   | FREE LPAR Exp RPAR PV                                {}
-  | IF LPAR Exp RPAR FIXIF Instr %prec ENDIF             { instarg("LABEL", (int) $5); } 
-  | IF LPAR Exp RPAR FIXIF Instr  ELSE FIXELSE Instr     { instarg("LABEL", (int) $8); }
-  | WHILE WHILESTART LPAR Exp RPAR WHILETEST Instr       { instarg("JUMP" , (int) $2); instarg("LABEL", (int) $6); }
-  | RETURN Exp PV                                        { $2; inst("RETURN"); }
-  | RETURN PV                                            {    inst("RETURN");    }
+  | IF LPAR Exp RPAR FIXIF Instr %prec ENDIF             { instarg("LABEL", $5); } 
+  | IF LPAR Exp RPAR FIXIF Instr  ELSE FIXELSE Instr     { instarg("LABEL", $8); }
+  | WHILE WHILESTART LPAR Exp RPAR WHILETEST Instr       { instarg("JUMP" , $2); instarg("LABEL", $6); }
+  | RETURN Exp PV                                        { inst("RETURN"); }
+  | RETURN PV                                            { inst("RETURN"); }
   | IDENT LPAR Arguments RPAR PV                         { instarg("CALL" , getAdr_fonction($1)); }
-  | READ LPAR IDENT RPAR PV                              {    inst("READ"); /*inst("PUSH");*/ }
-  | PRINT LPAR Exp RPAR PV                               { $3; inst("POP"); inst("WRITE"); }
+  | READ LPAR IDENT RPAR PV                              { instarg("SET", getAdr_variable($3)); inst("READ"); inst("SAVER"); }
+  | PRINT LPAR Exp RPAR PV                               { inst("POP"); inst("WRITE"); }
   | PV                                                   {}
   | InstrComp                                            {}
   ;
@@ -141,38 +142,33 @@ Arguments: ListExp
 ListExp: ListExp VRG Exp
   | Exp
   ;
-Exp: Exp ADDSUB Exp { 
-    $3; 
+Exp: Exp ADDSUB Exp {  
     inst("POP");
     inst("SWAP");
-    $1; inst("POP"); 
-    if ($2==add) 
-          inst("ADD"); 
-    else 
-          inst("SUB");
+    inst("POP"); 
+    ($2==add)?(inst("ADD")):(inst("SUB"));
     inst("PUSH");  
   }
-  | Exp STAR Exp { $3; inst("POP"); inst("SWAP"); $1; inst("POP");  inst("MULT"); inst("PUSH"); }
-  | Exp DIV Exp  { $3; inst("POP"); inst("SWAP"); $1; inst("POP");  inst("DIV");  inst("PUSH");  }
-  | Exp MOD Exp  { $3; inst("POP"); inst("SWAP"); $1; inst("POP");  inst("MOD");  inst("PUSH"); }
-  | Exp COMP Exp { $3; inst("POP"); 
-  inst("SWAP"); 
-  $1;
-  inst("POP");
-  switch($2) {
-    case eq:  inst("EQUAL"); break;
-    case neq: inst("NOTEQ"); break;
-    case lt:  inst("LOW");   break;
-    case gt:  inst("GREAT"); break;
-    case lte: inst("LEQ");   break;
-    case gte: inst("GEQ");   break;
-    default:  inst("UNDEFINED COMPARATOR");
+  | Exp STAR Exp { inst("POP"); inst("SWAP"); inst("POP");  inst("MULT"); inst("PUSH"); }
+  | Exp DIV Exp  { inst("POP"); inst("SWAP"); inst("POP");  inst("DIV");  inst("PUSH");  }
+  | Exp MOD Exp  { inst("POP"); inst("SWAP"); inst("POP");  inst("MOD");  inst("PUSH"); }
+  | Exp COMP Exp { 
+    inst("POP"); 
+    inst("SWAP"); 
+    inst("POP");
+    switch($2) {
+      case eq:  inst("EQUAL"); break;
+      case neq: inst("NOTEQ"); break;
+      case lt:  inst("LOW");   break;
+      case gt:  inst("GREAT"); break;
+      case lte: inst("LEQ");   break;
+      case gte: inst("GEQ");   break;
+      default:  inst("UNDEFINED COMPARATOR");
+    }
+    inst("PUSH"); 
   }
-  inst("PUSH"); 
-
-  }
-  | ADDSUB Exp { $2; if($1==sub) inst("NEG"); } /* TODO ######### */
-  | LPAR Exp RPAR { $2; }
+  | ADDSUB Exp { if($1==sub) inst("NEG"); } /* TODO ######### */
+  | LPAR Exp RPAR {}
   | Variable { 
   currentAdr_var =  getAdr_variable($1);
   instarg("SET", currentAdr_var); 
@@ -194,8 +190,8 @@ Exp: Exp ADDSUB Exp {
   }
 
   inst("PUSH");  }
-  | ADR Variable { currentAdr_var = getAdr_variable($2); }
-  | NUM { instarg("SET",$$=$1); inst("PUSH"); }
+  | ADR Variable { instarg("SET", getAdr_variable($2)); inst("PUSH"); }
+  | NUM { instarg("SET", $1); inst("PUSH"); }
   | IDENT LPAR Arguments RPAR { instarg("CALL" , getAdr_fonction($1)); inst("PUSH"); }
   ;
 
@@ -208,6 +204,7 @@ VAR: ENTIER { declaration_type = ent;}
   WHILESTART : { instarg("LABEL", $$=jump_label++); }
   WHILETEST  : { instarg("JUMPF", $$=jump_label++); }
   FIXDECLVAR: { declaration = true; }
+  FIXDECLFONCTION: {instarg("LABEL", jump_label++); pop=true;}
 
 %%
 

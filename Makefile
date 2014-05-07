@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall  -DYYDEBUG=1
+CFLAGS=-Wall  -g
 LDFLAGS=-Wall -ll
 EXEC=s_compilator
 
