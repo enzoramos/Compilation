@@ -22,6 +22,7 @@
 "free"    {return FREE; }
 "malloc"  {return MALLOC; }
 
+"&"  { return ADR; }
 ";"       {return PV; }
 "("			{return LPAR; }
 ")"			{return RPAR; }
@@ -44,6 +45,7 @@
 "/"  { yylval.operator = divide; return DIV; }
 "*"  { yylval.operator = times; return STAR; }
 "%"  { yylval.operator = mod; return MOD; }
+
 
 [a-zA-Z][a-zA-Z0-9_]* { strcpy(yylval.ident,yytext);   return IDENT;  }
 

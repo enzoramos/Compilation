@@ -1,21 +1,10 @@
 
 
-toast () {
-	entier b;
-	b=5;
-	print(b);
-	return;
+void test(void) {
+
 }
 
 main () {
-	entier a;
 
-	a = 4;
-
-	
-
-	print(a);
-
-	toast();
 	
 }
