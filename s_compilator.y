@@ -17,26 +17,34 @@ int yylex();
  void instarg(const char *,int);
  void comment(const char *);
 
+ int load_ListVar_index = -3;
+
 
 typedef struct {
   char name[256];
-  enum {ptr, ent} type;
+  enum {ptr, ent, cst} type;
   int  adr;
 } ident_t;
 
 enum {func, var} current_ident = var;
 
-int variables_index=4096;
-int fonctions_index=4096;
-ident_t variables[4096];
-ident_t fonctions[4096];
+#define MAX 4096
+int variables_index=MAX;
+int fonctions_index=MAX;
+int consts_index=MAX;
+ident_t variables[MAX];
+ident_t consts[MAX];
+ident_t fonctions[MAX];
 
  bool isDecl_variable(const char * name);
  bool isDecl_fonciton(const char * name);
  int  getAdr_variable(const char * name);
  int  getAdr_fonction(const char * name);
  void decl_variable  (const char * name, int type);
+ void decl_const  (const char * name, int type);
  void decl_fonction  (const char * name, int type);
+ void load_variable(const char * name, int type);
+ void load_ListVar(const char * name);
 
  void clear_ident(ident_t* idents, int * size);
 
@@ -76,11 +84,11 @@ ident_t fonctions[4096];
 
 prog: DeclConst DeclVar DeclFonct DeclMain
   ;
-DeclConst: DeclConst CONST ListConst PV
+DeclConst: DeclConst CONST ListConst PV 
   | /* epsi */
   ;
 ListConst: ListConst VRG IDENT EGAL NombreSigne
-  | IDENT EGAL NombreSigne
+  | IDENT EGAL NombreSigne                { decl_const($1,$3); }
   ;
 NombreSigne: NUM { $$=$1; }
   | ADDSUB NUM { $$=($1==sub)?(-$2):($2); }
@@ -89,11 +97,19 @@ NombreSigne: NUM { $$=$1; }
 DeclVar: DeclVar VAR FIXDECLVAR ListVar PV { declaration = false;  }
   | /* epsi */
   ;
-ListVar: ListVar VRG Variable { strcpy($$,$1); if(declaration) decl_variable($3, declaration_type); if (pop) { decl_variable($3, 0); instarg("SET", -variables_index); inst("LOADR");   }   }
-  | Variable { strcpy($$,$1); if(declaration) decl_variable($1, declaration_type); if (pop) { decl_variable($1, 0); instarg("SET", -variables_index); inst("LOADR");   }  }
+ListVar: Variable VRG ListVar    { 
+    strcpy($$,$3); 
+    load_ListVar($1); 
+  }
+  | Variable { 
+    strcpy($$,$1); 
+    if(declaration) 
+      decl_variable($1, declaration_type); 
+    load_ListVar($1);
+  }
 Variable: STAR Variable       { strcpy($$,$2); pointeur_decal = 0; }
   | IDENT LSQB Exp RSQB       { strcpy($$,$1); pointeur_decal = 1; }
-  | IDENT                     { strcpy($$,$1); pointeur_decal = -1; }
+  | IDENT                     { strcpy($$,$1); pointeur_decal = -1;  }
   ;
 DeclMain: EnTeteMain Corps {  }
   ;
@@ -102,14 +118,14 @@ EnTeteMain: MAIN LPAR RPAR { instarg("LABEL", 0); }
 DeclFonct: DeclFonct DeclUneFonct
   | /* epsi */
   ;
-DeclUneFonct: EnTeteFonct Corps {  }
+DeclUneFonct: EnTeteFonct Corps { clear_ident(variables, &variables_index);  }
   ;
-EnTeteFonct: Type IDENT FIXDECLFONCTION LPAR Parametres RPAR { decl_fonction($2, $1); pop = false;  }
+EnTeteFonct: Type IDENT FIXDECLFONCTION LPAR Parametres RPAR { decl_fonction($2, $1); pop = false; load_ListVar_index = -3;  }
   ;
 Type: ENTIER { $$ = 1; }
   | VOID { $$ = 0; }
   ;
-Parametres: VOID {  } 
+Parametres: VOID {} 
   | ListVar
   /* | epsi */                                 /* Élargit le langage */
   ;
@@ -128,9 +144,9 @@ Instr: IDENT EGAL Exp PV                                 { instarg("SET", getAdr
   | IF LPAR Exp RPAR FIXIF Instr %prec ENDIF             { instarg("LABEL", $5); } 
   | IF LPAR Exp RPAR FIXIF Instr  ELSE FIXELSE Instr     { instarg("LABEL", $8); }
   | WHILE WHILESTART LPAR Exp RPAR WHILETEST Instr       { instarg("JUMP" , $2); instarg("LABEL", $6); }
-  | RETURN Exp PV                                        { inst("RETURN"); }
+  | RETURN Exp PV                                        { inst("POP"); inst("RETURN"); }
   | RETURN PV                                            { inst("RETURN"); }
-  | IDENT LPAR Arguments RPAR PV                         { instarg("CALL" , getAdr_fonction($1)); }
+  | IDENT LPAR Arguments RPAR PV                         { instarg("CALL" , getAdr_fonction($1)); /* TODO CORRIGER LA CUSTOM */}
   | READ LPAR IDENT RPAR PV                              { instarg("SET", getAdr_variable($3)); inst("READ"); inst("SAVER"); }
   | PRINT LPAR Exp RPAR PV                               { inst("POP"); inst("WRITE"); }
   | PV                                                   {}
@@ -140,7 +156,7 @@ Arguments: ListExp
   | /* epsi */
   ;
 ListExp: ListExp VRG Exp
-  | Exp
+  | Exp {}
   ;
 Exp: Exp ADDSUB Exp {  
     inst("POP");
@@ -200,7 +216,7 @@ VAR: ENTIER { declaration_type = ent;}
   ;
 
   FIXIF :      { instarg("JUMPF", $$=jump_label+=2); }
-  FIXELSE :    { instarg("JUMP", $$=jump_label); instarg("LABEL", jump_label-1); }
+  FIXELSE :    { instarg("JUMP", $$=jump_label++); instarg("LABEL", jump_label-1); }
   WHILESTART : { instarg("LABEL", $$=jump_label++); }
   WHILETEST  : { instarg("JUMPF", $$=jump_label++); }
   FIXDECLVAR: { declaration = true; }
@@ -213,6 +229,15 @@ int yyerror(char* s) {
   return 0;
 }
 
+
+void load_ListVar(const char * name) {
+  if (pop) { 
+      /*instarg("SET", load_ListVar_index); 
+      inst("LOADR");*/
+      load_variable(name, load_ListVar_index); 
+      load_ListVar_index--;
+    }  
+}
 
  bool isDecl_ident(const char * name, ident_t* ident, int ident_index) {
     int i;
@@ -232,22 +257,29 @@ int yyerror(char* s) {
     strcpy(ident[ident_index].name, name);
     ident[ident_index].adr = adr;
     ident[ident_index].type = type;
-    if(alloc) instarg("ALLOC", 2);
+    if(alloc) instarg("ALLOC", 1);
  }
 
 
  int  getAdr_ident(const char * name, ident_t* ident, int ident_index) {
     int i;
-    /*printf("%s max : %d\n", name, ident_index);*/
+    //printf("%s max : %d\n", name, ident_index);
     for (i=0; i < ident_index; i++) {
-      /*printf("%s == %s ? %d\n", name, ident[i].name, i);*/
+      //printf("%s == %s ? %d\n", name, ident[i].name, i);
       if (strcmp(ident[i].name, name) == 0) {
         return ident[i].adr;
       }
     }
-    inst("ERROR UNKNOWN VARIABLE");
+    yyerror("ERROR UNKNOWN VARIABLE");
+    yyerror((char *)name);
     exit(EXIT_FAILURE);
     return -1;
+ }
+
+ void decl_const( const char *name, int value) {
+  decl_ident(name, consts, consts_index, consts_index, cst, false);
+  consts[consts_index].adr = value;
+  consts_index++;
  }
 
 bool isDecl_variable(const char * name) {
@@ -264,12 +296,21 @@ return getAdr_ident(name, variables, variables_index);
     /* printf("get function\n"); */
   return getAdr_ident(name, fonctions, fonctions_index);
  }
+ int  getAdr_const(const char * name) {
+    /* printf("get function\n"); */
+  return getAdr_ident(name, fonctions, fonctions_index);
+ }
+ void load_variable(const char * name, int type) {
+  //fprintf(stderr, "Load Variable %s\n", name);
+  decl_ident(name, variables, variables_index, type, 0, false);
+  variables_index++;
+ }
  void decl_variable(const char * name, int type) {
   decl_ident(name, variables, variables_index, variables_index, type, true);
   variables_index++;
  }
  void decl_fonction(const char * name, int type) {
-  decl_ident(name, fonctions, fonctions_index, jump_label, type, false);
+  decl_ident(name, fonctions, fonctions_index, jump_label-1 /* Le label a deja ete incremente, => call-1 */ , type, false); 
   fonctions_index++;
  }
 

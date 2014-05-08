@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall  -g
+CFLAGS=-Wall  -g 
 LDFLAGS=-Wall -ll
 EXEC=s_compilator
 
@@ -15,6 +15,9 @@ $(EXEC).h: $(EXEC).c
 
 lex.yy.c: $(EXEC).lex $(EXEC).h
 	flex $(EXEC).lex
+
+lex.yy.o:lex.yy.c
+	gcc -o $@ -c $<
 
 %.o: %.c
 	gcc -o $@ -c $< $(CFLAGS)

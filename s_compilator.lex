@@ -3,7 +3,9 @@
 %}
 %%
 [ \t\n]+ ;
+
 [0-9]+ {sscanf(yytext,"%d",&(yylval.entier)); return NUM;}
+[null|NULL]  {yylval.entier = 0; return NUM; }
 
 "if" 			{return IF;}
 "else"			{return ELSE;}

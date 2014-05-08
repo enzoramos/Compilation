@@ -1,8 +1,14 @@
 
 
+void test(z,a) {
+	print(z);
+	print(a);
+	return a;
+}
 
 main () {
-	entier a;
-	 a = 10;
-	 print(a);
+	entier c;
+	c=10;
+	c = test(7,11);
+	print(c);
 }
