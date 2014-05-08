@@ -1,14 +1,18 @@
-
+const salut = 3 - 3;
 
 void test(z,a) {
+	const sal = 2;
 	print(z);
-	print(a);
+	print(salut);
 	return a;
 }
 
 main () {
-	entier c;
-	c=10;
-	c = test(7,11);
+	pointeur c;
+	pointeur b;
+	entier a;
+	c=malloc(40);
+	b= &a;
+
 	print(c);
 }

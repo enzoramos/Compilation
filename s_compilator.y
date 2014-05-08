@@ -22,16 +22,18 @@ int yylex();
 
 typedef struct {
   char name[256];
-  enum {ptr, ent, cst} type;
+  enum {ptr, ent, cst, mlc} type;
   int  adr;
 } ident_t;
 
 enum {func, var} current_ident = var;
 
 #define MAX 4096
+#define TAS 10000
 int variables_index=MAX;
 int fonctions_index=MAX;
 int consts_index=MAX;
+int tas_index=0; 
 ident_t variables[MAX];
 ident_t consts[MAX];
 ident_t fonctions[MAX];
@@ -46,9 +48,12 @@ ident_t fonctions[MAX];
  void decl_fonction  (const char * name, int type);
  void load_variable(const char * name, int type);
  void load_ListVar(const char * name);
+ bool isDecl_const(const char *name);
 
  void clear_ident(ident_t* idents, int * size);
 
+ void setVariable_mlc(const char *name, int size);
+ const char * getLoader(const char * name);
 
 %}
 
@@ -58,7 +63,7 @@ ident_t fonctions[MAX];
   char                                        ident[256];
   enum { gte, gt, lt, lte, eq, neq }          comparator;
   enum { add, sub, times, divide, mod }       operator;
-  enum { vrg, pv }                            separator;
+  enum { vrg, pv}                            separator;
   enum { lpar, rpar, lacc, racc, lsqb, rsqb } block;
   int type;
 }
@@ -93,6 +98,10 @@ ListConst: ListConst VRG IDENT EGAL NombreSigne
   ;
 NombreSigne: NUM { $$=$1; }
   | ADDSUB NUM { $$=($1==sub)?(-$2):($2); }
+  | NombreSigne ADDSUB NombreSigne {  $$=($2==add)?($1+$3):($1-$3); }
+  | NombreSigne STAR NombreSigne { $$=$1*$3; }
+  | NombreSigne DIV NombreSigne  { if($3 == 0) { yyerror("ERROR DIVIDE BY 0"); /* CHECK FAIL COMPIL */ } else $$=$1/$3; }
+  | NombreSigne MOD NombreSigne  { $$=$1%$3; }
   ;
 
 DeclVar: DeclVar VAR FIXDECLVAR ListVar PV { declaration = false;  }
@@ -108,7 +117,7 @@ ListVar: Variable VRG ListVar    {
       decl_variable($1, declaration_type); 
     load_ListVar($1);
   }
-Variable: STAR Variable       { strcpy($$,$2); pointeur_decal = 0; }
+Variable: STAR Variable       { strcpy($$,$2); pointeur_decal = 0; inst("LOADR"); }
   | IDENT LSQB Exp RSQB       { strcpy($$,$1); pointeur_decal = 1; }
   | IDENT                     { strcpy($$,$1); pointeur_decal = -1;  }
   ;
@@ -140,7 +149,7 @@ InstrComp: LACC SuiteInstr RACC
 Instr: IDENT EGAL Exp PV                                 { instarg("SET", getAdr_variable($1)); inst("SWAP");  inst("POP"); inst("SAVER"); }
   | STAR IDENT EGAL Exp PV                               { instarg("SET", getAdr_variable($2)); inst("LOADR"); inst("SWAP"); inst("POP"); inst("SAVER"); }
   | IDENT LSQB Exp RSQB EGAL Exp PV                      { instarg("SET", getAdr_variable($1)); inst("SWAP"); inst("POP"); inst("ADD"); inst("LOADR"); inst("SWAP"); inst("POP"); inst("SAVER"); }
-  | IDENT EGAL MALLOC LPAR Exp RPAR PV                   {}
+  | IDENT EGAL MALLOC LPAR NombreSigne RPAR PV           { setVariable_mlc($1, $5); }
   | FREE LPAR Exp RPAR PV                                {}
   | IF LPAR Exp RPAR FIXIF Instr %prec ENDIF             { instarg("LABEL", $5); } 
   | IF LPAR Exp RPAR FIXIF Instr  ELSE FIXELSE Instr     { instarg("LABEL", $8); }
@@ -148,7 +157,7 @@ Instr: IDENT EGAL Exp PV                                 { instarg("SET", getAdr
   | RETURN Exp PV                                        { inst("POP"); inst("RETURN"); }
   | RETURN PV                                            { inst("RETURN"); }
   | IDENT LPAR Arguments RPAR PV                         { instarg("CALL" , getAdr_fonction($1)); /* TODO CORRIGER LA CUSTOM */}
-  | READ LPAR IDENT RPAR PV                              { instarg("SET", getAdr_variable($3)); inst("READ"); inst("SAVER"); }
+  | READ LPAR IDENT RPAR PV                              { instarg("SET", getAdr_variable($3)); inst("SWAP"); inst("READ"); inst("SAVER"); }
   | PRINT LPAR Exp RPAR PV                               { inst("POP"); inst("WRITE"); }
   | PV                                                   {}
   | InstrComp                                            {}
@@ -187,12 +196,12 @@ Exp: Exp ADDSUB Exp {
   | ADDSUB Exp { if($1==sub) inst("NEG"); } /* TODO ######### */
   | LPAR Exp RPAR {}
   | Variable {
-    if ( isConst($1) ) {
-      instarg("SET", getValue_const($1));
-    } else {
+    if ( isDecl_variable($1) ) {
       currentAdr_var =  getAdr_variable($1);
       instarg("SET", currentAdr_var); 
-      inst("LOADR");  
+      inst(getLoader($1));  
+    } else {
+      instarg("SET", getValue_const($1));
     }
 
   /* test si c'est une gobale */
@@ -212,7 +221,7 @@ Exp: Exp ADDSUB Exp {
 
   inst("PUSH");  }
   | ADR Variable { instarg("SET", getAdr_variable($2)); inst("PUSH"); }
-  | NUM { instarg("SET", $1); inst("PUSH"); }
+  | NombreSigne { instarg("SET", $1); inst("PUSH"); }
   | IDENT LPAR Arguments RPAR { instarg("CALL" , getAdr_fonction($1)); inst("PUSH"); }
   ;
 
@@ -256,7 +265,7 @@ void load_ListVar(const char * name) {
 
  void decl_ident(const char * name, ident_t* ident, int ident_index, int adr, int type, bool alloc) {
     if(isDecl_variable(name) == true) {
-      inst("ERROR : DECLARED VARIABLE");
+      yyerror("ERROR : DECLARED VARIABLE");
       exit(EXIT_FAILURE);
     }
     strcpy(ident[ident_index].name, name);
@@ -275,16 +284,10 @@ void load_ListVar(const char * name) {
         return ident[i].adr;
       }
     }
-    yyerror("ERROR UNKNOWN VARIABLE");
+    yyerror("ERROR UNKNOWN IDENT");
     yyerror((char *)name);
     exit(EXIT_FAILURE);
     return -1;
- }
-
- void decl_const( const char *name, int value) {
-  decl_ident(name, consts, consts_index, consts_index, cst, false);
-  consts[consts_index].adr = value;
-  consts_index++;
  }
 
 bool isDecl_variable(const char * name) {
@@ -301,14 +304,8 @@ return getAdr_ident(name, variables, variables_index);
     /* printf("get function\n"); */
   return getAdr_ident(name, fonctions, fonctions_index);
  }
- int isConst(const char *name) {
-    //printf("%s max : %d\n", name, ident_index);
-    for (i=0; i < consts_index; i++) {
-      //printf("%s == %s ? %d\n", name, ident[i].name, i);
-      if (strcmp(consts[i].name, name) == 0) {
-        return consts[i].adr;
-      }
-    }
+ bool isDecl_const(const char *name) {
+  return isDecl_ident(name, consts, consts_index);
  }
  int  getValue_const(const char * name) {
   return getAdr_ident(name, consts, consts_index);
@@ -327,12 +324,55 @@ return getAdr_ident(name, variables, variables_index);
   fonctions_index++;
  }
 
+ void decl_const( const char *name, int value) {
+  decl_ident(name, consts, consts_index, consts_index, cst, false);
+  consts[consts_index].adr = value;
+  consts_index++;
+ }
+
   void clear_ident(ident_t* idents, int * size) {
     int i;
     for(i = 0; i < *size; i++) {
       idents[i].name[0] = '\0';
     }
     *size = 0;
+  }
+
+
+  void setVariable_mlc(const char *name, int size) {
+    int i, index;
+    for (i=0; i < variables_index; i++) {
+      if (strcmp(variables[i].name, name) == 0) {
+           index = i;
+           break;
+      }
+    }
+    if((tas_index+1)+size > TAS) {
+      fprintf(stderr, "MAX SIZE EXECED\n");
+      return;
+    }
+
+    variables[index].type = mlc;
+    variables[index].adr = tas_index+1;
+
+    // Ajout de la size en tete
+    instarg("SET", tas_index);
+    inst("SWAP");
+    instarg("SET", size);
+    inst("SAVE");
+
+    tas_index += size+1;
+
+  }
+
+  const char * getLoader(const char * name) {
+    int i;
+      for (i=0; i < variables_index; i++) {
+      if (strcmp(variables[i].name, name) == 0) {
+           return (variables[i].type==mlc)?"LOAD":"LOADR";
+      }
+    }
+    return "LOADR";
   }
 
 void endProgram() {
@@ -346,7 +386,6 @@ void inst(const char *s){
 void instarg(const char *s,int n){
   printf("%s\t%d\n",s,n);
 }
-
 
 void comment(const char *s){
   printf("#%s\n",s);
@@ -366,8 +405,10 @@ int main(int argc, char** argv) {
 
   clear_ident(variables, &variables_index);
   clear_ident(fonctions, &fonctions_index);
+  clear_ident(consts, &consts_index);
 
   /* TODO INIATILISE MAIN in FONCTIONS */
+  instarg("ALLOC", TAS);
   instarg("JUMP", 0);
   yyparse();
   endProgram();
