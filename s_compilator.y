@@ -40,6 +40,7 @@ ident_t fonctions[MAX];
  bool isDecl_fonciton(const char * name);
  int  getAdr_variable(const char * name);
  int  getAdr_fonction(const char * name);
+ int  getValue_const(const char * name);
  void decl_variable  (const char * name, int type);
  void decl_const  (const char * name, int type);
  void decl_fonction  (const char * name, int type);
@@ -185,10 +186,14 @@ Exp: Exp ADDSUB Exp {
   }
   | ADDSUB Exp { if($1==sub) inst("NEG"); } /* TODO ######### */
   | LPAR Exp RPAR {}
-  | Variable { 
-  currentAdr_var =  getAdr_variable($1);
-  instarg("SET", currentAdr_var); 
-  inst("LOADR");  
+  | Variable {
+    if ( isConst($1) ) {
+      instarg("SET", getValue_const($1));
+    } else {
+      currentAdr_var =  getAdr_variable($1);
+      instarg("SET", currentAdr_var); 
+      inst("LOADR");  
+    }
 
   /* test si c'est une gobale */
   if(pointeur_decal >= 0) {
@@ -296,9 +301,17 @@ return getAdr_ident(name, variables, variables_index);
     /* printf("get function\n"); */
   return getAdr_ident(name, fonctions, fonctions_index);
  }
- int  getAdr_const(const char * name) {
-    /* printf("get function\n"); */
-  return getAdr_ident(name, fonctions, fonctions_index);
+ int isConst(const char *name) {
+    //printf("%s max : %d\n", name, ident_index);
+    for (i=0; i < consts_index; i++) {
+      //printf("%s == %s ? %d\n", name, ident[i].name, i);
+      if (strcmp(consts[i].name, name) == 0) {
+        return consts[i].adr;
+      }
+    }
+ }
+ int  getValue_const(const char * name) {
+  return getAdr_ident(name, consts, consts_index);
  }
  void load_variable(const char * name, int type) {
   //fprintf(stderr, "Load Variable %s\n", name);
